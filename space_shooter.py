@@ -21,7 +21,34 @@ blue = (23, 54, 235)  # RGB Code for Blue Bullet
 background = pygame.transform.scale(pygame.image.load('gallery/sprites/background.png'),(frame_size_x, frame_size_y)).convert()
 space_shooter_logo = pygame.image.load('gallery/sprites/space_shooter.png').convert_alpha()
 space_shooter_logo = pygame.transform.scale(space_shooter_logo, (300, 150))
+green_ship_img = pygame.transform.rotate(pygame.image.load('gallery/sprites/shipGreen.png'), 270)
+blue_ship_img = pygame.transform.rotate(pygame.image.load('gallery/sprites/shipBlue.png'), 90)  
+green_ship = pygame.transform.scale(green_ship_img, (ship_width, ship_height)).convert_alpha()
+blue_ship = pygame.transform.scale(blue_ship_img, (ship_width, ship_height)).convert_alpha()
+
 bullet_fire_sound = pygame.mixer.Sound('gallery/audio/sfx_fire.ogg')
+
+def main():
+clock = pygame.time.Clock()
+
+green_rect = pygame.Rect(100, 100, ship_width, ship_height)
+blue_rect = pygame.Rect(700, 300, ship_width, ship_height)
+
+green_bullets = []
+blue_bullets = []
+while True:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                pygame.quit()
+            sys.exit()
+
+        window_screen.blit(background, (0, 0))
+        window_screen.blit(green_ship, (green_rect.x, green_rect.y))
+        window_screen.blit(blue_ship, (blue_rect.x, blue_rect.y))
+        pygame.display.update()  # Update Screen
+
+
 def welcome_screen():
     while True:
         window_screen.blit(background, (0, 0))  
@@ -34,6 +61,12 @@ def welcome_screen():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LCTRL and len(green_bullets)< max_num_of_bullet:
+                    bullet_fire_sound.play()
+                if event.key == pygame.K_RCTRL and len(blue_bullets)< max_num_of_bullet:
+                    bullet_fire_sound.play()
+            if event.type == pygame.KEYDOWN:
                 print("Start the game")
-pygame.display.update()
-welcome_screen()    
+                main()
+        pygame.display.update()
+        welcome_screen()    
