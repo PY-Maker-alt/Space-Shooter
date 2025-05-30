@@ -13,6 +13,8 @@ frame_size_y = 500
 # Set nilai FPS (frame per second)
 FPS = 60  # Kecepatan game (60 frame per detik)
 velocity = 5
+green_hit = pygame.USEREVENT + 1
+blue_hit = pygame.USEREVENT + 2
 
 # Ukuran pesawat pemain
 ship_width = 55     # Lebar pesawat (55 pixel)
@@ -33,6 +35,8 @@ white = (255, 255, 255)
 black = (0, 0, 0)
 green = (110, 194, 54)  # Warna peluru hijau
 blue = (23, 54, 235)    # Warna peluru biru
+health_font = pygame.font.SysFont('Impact', 40)
+winner_font = pygame.font.SysFont('Impact', 100)
 border = pygame.Rect((frame_size_x // 2) - 5, 0, 10, frame_size_y)
 
 # Load dan atur gambar latar belakang
@@ -59,18 +63,24 @@ blue_ship = pygame.transform.scale(blue_ship_img, (ship_width, ship_height)).con
 
 # Load efek suara untuk peluru
 bullet_fire_sound = pygame.mixer.Sound('gallery/audio/sfx_fire.ogg')
+bullet_hit_sound = pygame.mixer.Sound('gallery/audio/sfx_hit.ogg')
+game_end_sound = pygame.mixer.Sound('gallery/audio/sfx_game_over.ogg')
 
 # Fungsi utama permainan
 def handle_bullets(green_bullets, blue_bullets, green, blue):
     for bullet in green_bullets:
         bullet.x += bullet_velocity
         if blue.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(blue_hit))
+            green_bullets.remove(bullet)
             green_bullets.remove(bullet)
         elif bullet.x > frame_size_x:
             green_bullets.remove(bullet)
             for bullet in blue_bullets:
                 bullet.x -= bullet_velocity
         if green.colliderect(bullet):
+            pygame.event.post(pygame.event.Event(pygame.USEREVENT, {"message": "Green ship shot!"}))   
+            blue_bullets.remove(bullet)
             blue_bullets.remove(bullet)
         elif bullet.x < 0:
             blue_bullets.remove(bullet)
@@ -92,14 +102,28 @@ def green_movement_handler(keys_pressed, green):
         green.y += velocity   
     if keys_pressed[pygame.K_d] and green.x - velocity + green.width < border.x - 5:  #RIGHT
         green.x += velocity
-def draw_window():  
-
+def draw_window(green_rect, blue_rect, green_bullets, blue_bullets, green_health, blue_health):
+    window_screen.blit(background, (0, 0))
+    pygame.draw.rect(window_screen, black, border)
+    green_health_text = health_font.render("Health: " + str(green_health), 1, white)
+    blue_health_text = health_font.render("Health: " + str(blue_health), 1, white)
+    window_screen.blit(blue_health_text, (720,10))
+    window_screen.blit(green_health_text, (10,10))
+def draw_winner(text):
+    winner_text = winner_font.render(text, 1, white)
+    window_screen.blit(winner_text, (frame_size_x // 2 - winner_text.get_width() /2, frame_size_y // 2 - winner_text.get_height() / 2))
+    pygame.display.update()
+    game_end_sound.play()
+    pygame.time.delay(5000)
+    
 def main():
     clock = pygame.time.Clock()  # Buat clock untuk mengatur kecepatan game
     green_rect = pygame.Rect(100, 100, ship_width, ship_height)  # Posisi awal pesawat hijau
     blue_rect = pygame.Rect(700, 300, ship_width, ship_height)   # Posisi awal pesawat biru
     green_bullets = []  # Daftar peluru yang ditembak oleh pemain hijau
     blue_bullets = []   # Daftar peluru yang ditembak oleh pemain biru
+    green_health = 10
+    blue_health = 10
 
     while True:
         clock.tick(FPS)  # Batasi loop per detik agar tetap konsisten
@@ -122,12 +146,31 @@ def main():
                     blue_bullets.append(bullet)
                     bullet_fire_sound.play()
                     bullet_fire_sound.play()  # Suara tembakan pesawat biru
+                
+                if event.type == green_hit:
+                    green_health -= 1
+                    bullet_hit_sound.play()
+
+                if event.type == blue_hit:
+                    blue_health -= 1
+                    bullet_hit_sound.play()
 
         # Gambar latar belakang dan pesawat
+        winner_text = ""
+        if green_health < 1:
+            winner_text = "Blue Wins"
+
+        if blue_health < 1:
+            winner_text = "Green Wins"
+
+        if winner_text != "":
+            draw_winner(winner_text)
+            break
         keys_pressed = pygame.key.get_pressed()
         print(keys_pressed[pygame.K_LEFT], keys_pressed[pygame.K_RIGHT])
         print(green_bullets, blue_bullets)
         handle_bullets(green_bullets, blue_bullets, green_rect, blue_rect)
+        print(green_health, blue_health)
         draw_window(green_rect, blue_rect, green_bullets, blue_bullets) 
         green_movement_handler(keys_pressed, green_rect)
         window_screen.blit(background, (0, 0))
