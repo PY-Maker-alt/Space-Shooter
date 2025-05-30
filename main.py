@@ -23,7 +23,7 @@ blue_hit = pygame.USEREVENT+2
 ship_width = 55
 ship_height = 40
 # Batas maksimal peluru yang bisa ditembak sekaligus
-max_num_of_bullet = 5
+max_num_of_bullet = 100
 # Kecepatan peluru
 bullet_velocity = 7
 
@@ -141,7 +141,7 @@ def main():
     green_bullets = []
     blue_bullets = []
     green_health = 10
-    blue_health = 10
+    blue_health = 100
 
     while True:
         clock.tick(FPS)  # Membatasi kecepatan game
